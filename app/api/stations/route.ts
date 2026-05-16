@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
         (station) => station.department.toUpperCase() === department
       );
 
-      return NextResponse.json(filtered.slice(0, 600), { status: 200 });
+      return NextResponse.json(filtered.slice(0, 1000), { status: 200 });
     }
 
     if (search) {
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
           matchesCity(station.city, matchedCity)
         );
 
-        return NextResponse.json(filtered.slice(0, 1200), { status: 200 });
+        return NextResponse.json(filtered.slice(0, 1400), { status: 200 });
       }
 
       const matchedRegion = findRegionInSearch(search);
