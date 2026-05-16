@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
         (station) => station.department.toUpperCase() === department
       );
 
-      return NextResponse.json(filtered.slice(0, 400), { status: 200 });
+      return NextResponse.json(filtered.slice(0, 600), { status: 200 });
     }
 
     if (search) {
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
           matchesCity(station.city, matchedCity)
         );
 
-        return NextResponse.json(filtered.slice(0, 800), { status: 200 });
+        return NextResponse.json(filtered.slice(0, 1200), { status: 200 });
       }
 
       const matchedRegion = findRegionInSearch(search);
@@ -52,11 +52,11 @@ export async function GET(request: NextRequest) {
           departmentCodes.includes(station.department)
         );
 
-        return NextResponse.json(filtered.slice(0, 1200), { status: 200 });
+        return NextResponse.json(filtered.slice(0, 1800), { status: 200 });
       }
     }
 
-    return NextResponse.json(stations.slice(0, 2000), { status: 200 });
+    return NextResponse.json(stations.slice(0, 2600), { status: 200 });
   } catch (error) {
     console.error("Erreur API stations:", error);
 
