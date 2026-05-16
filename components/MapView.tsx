@@ -89,7 +89,7 @@ export default function MapView({ stations, selectedFuel }: Props) {
           showCoverageOnHover={false}
           spiderfyOnMaxZoom
           maxClusterRadius={45}
-          iconCreateFunction={(cluster) => createClusterIcon(cluster.getChildCount())}
+          iconCreateFunction={(cluster: { getChildCount: () => number }) =>createClusterIcon(cluster.getChildCount())}
         >
           {stations.map((station) => {
             const selectedPrice = getPriceForFuel(station, selectedFuel);
