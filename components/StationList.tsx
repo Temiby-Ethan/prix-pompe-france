@@ -1,7 +1,7 @@
 "use client";
 
 import { FuelType, Station } from "@/types/station";
-import { getPriceForFuel } from "@/lib/filters";
+import { getMarkerPriceColor, getPriceForFuel } from "@/lib/filters";
 
 type Props = {
   stations: Station[];
@@ -9,42 +9,51 @@ type Props = {
 };
 
 export default function StationList({ stations, selectedFuel }: Props) {
+  const visibleStations = stations.slice(0, 30);
+
   return (
-    <div style={{ padding: "1rem", border: "1px solid #ddd", borderRadius: "8px" }}>
-      <h2>Stations ({stations.length})</h2>
+    <section className="panel panel-section stations-panel">
+      <div className="panel-heading">
+        <h2>Stations</h2>
+        <span className="panel-badge">{stations.length}</span>
+      </div>
 
       {stations.length === 0 ? (
-        <p>Aucune station trouvée.</p>
+        <p className="empty-state">Aucune station trouvée.</p>
       ) : (
-        <ul style={{ listStyle: "none", padding: 0 }}>
-          {stations.map((station) => {
+        <div className="station-list">
+          {visibleStations.map((station) => {
             const price = getPriceForFuel(station, selectedFuel);
+            const color = getMarkerPriceColor(price, selectedFuel);
 
             return (
-              <li
-                key={station.id}
-                style={{
-                  marginBottom: "1rem",
-                  paddingBottom: "1rem",
-                  borderBottom: "1px solid #eee",
-                }}
-              >
-                <strong>{station.name}</strong>
-                <br />
-                {station.city} ({station.postalCode})
-                <br />
-                {price !== null ? (
-                  <span>
-                    {selectedFuel} : <strong>{price.toFixed(3)} €</strong>
-                  </span>
-                ) : (
-                  <span>Prix indisponible</span>
-                )}
-              </li>
+              <article key={station.id} className="station-card">
+                <div className="station-top">
+                  <div>
+                    <h3>{station.name}</h3>
+                    <p className="station-city">
+                      {station.city} ({station.postalCode})
+                    </p>
+                  </div>
+
+                  <div className={`price-chip ${color}`}>
+                    {price !== null ? `${price.toFixed(3)} €` : "N/A"}
+                  </div>
+                </div>
+
+                <p className="station-address">{station.address}</p>
+                <p className="station-meta">Département {station.department}</p>
+              </article>
             );
           })}
-        </ul>
+        </div>
       )}
-    </div>
+
+      {stations.length > 30 && (
+        <p className="panel-footnote">
+          Seules les 30 premières stations sont affichées dans cette liste.
+        </p>
+      )}
+    </section>
   );
 }

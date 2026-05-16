@@ -1,4 +1,4 @@
-export type FuelType = "Gazole" | "SP95" | "SP98" | "E10" | "E85" | "GPL";
+export type FuelType = "Gazole" | "SP95" | "SP98" | "E10" | "E85" | "GPLc";
 
 export type FuelPrice = {
   fuelType: FuelType;

@@ -43,7 +43,7 @@ export const mockStations: Station[] = [
     prices: [
       { fuelType: "Gazole", price: 1.76 },
       { fuelType: "SP98", price: 1.90 },
-      { fuelType: "GPL", price: 0.99 },
+      { fuelType: "GPLc", price: 0.99 },
     ],
   },
 ];

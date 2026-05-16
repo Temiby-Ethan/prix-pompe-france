@@ -1,9 +1,11 @@
 "use client";
 
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
-import L from "leaflet";
-import { Station, FuelType } from "@/types/station";
-import { getPriceForFuel } from "@/lib/filters";
+import { useEffect } from "react";
+import L, { DivIcon } from "leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
+import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
+import { FuelType, Station } from "@/types/station";
+import { getMarkerPriceColor, getPriceForFuel } from "@/lib/filters";
 import "leaflet/dist/leaflet.css";
 
 type Props = {
@@ -11,54 +13,123 @@ type Props = {
   selectedFuel: FuelType;
 };
 
-delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
+function createPriceIcon(price: number | null, color: "green" | "orange" | "red" | "gray"): DivIcon {
+  const label = price !== null ? price.toFixed(3) : "N/A";
 
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
+  return L.divIcon({
+    className: "custom-price-marker-wrapper",
+    html: `
+      <div class="custom-price-marker ${color}">
+        <span>${label}</span>
+      </div>
+    `,
+    iconSize: [58, 28],
+    iconAnchor: [29, 28],
+    popupAnchor: [0, -28],
+  });
+}
+
+function createClusterIcon(count: number): DivIcon {
+  let sizeClass = "small";
+  if (count >= 50) sizeClass = "large";
+  else if (count >= 20) sizeClass = "medium";
+
+  return L.divIcon({
+    className: "cluster-icon-wrapper",
+    html: `
+      <div class="cluster-icon ${sizeClass}">
+        <span>${count}</span>
+      </div>
+    `,
+    iconSize: [48, 48],
+  });
+}
+
+function FitToStations({ stations }: { stations: Station[] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (stations.length === 0) {
+      map.setView([46.603354, 1.888334], 6);
+      return;
+    }
+
+    if (stations.length === 1) {
+      map.setView([stations[0].lat, stations[0].lon], 12);
+      return;
+    }
+
+    const bounds = L.latLngBounds(
+      stations.map((station) => [station.lat, station.lon] as [number, number])
+    );
+    map.fitBounds(bounds, { padding: [40, 40] });
+  }, [map, stations]);
+
+  return null;
+}
 
 export default function MapView({ stations, selectedFuel }: Props) {
   return (
-    <div style={{ height: "500px", width: "100%" }}>
+    <div className="map-shell">
       <MapContainer
         center={[46.603354, 1.888334]}
         zoom={6}
-        scrollWheelZoom={true}
-        style={{ height: "100%", width: "100%", borderRadius: "8px" }}
+        scrollWheelZoom
+        className="map-root"
       >
         <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
+          attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {stations.map((station) => {
-          const price = getPriceForFuel(station, selectedFuel);
+        <FitToStations stations={stations} />
 
-          return (
-            <Marker key={station.id} position={[station.lat, station.lon]}>
-              <Popup>
-                <div>
-                  <strong>{station.name}</strong>
-                  <br />
-                  {station.address}
-                  <br />
-                  {station.city} ({station.postalCode})
-                  <br />
-                  <br />
-                  {price !== null ? (
-                    <span>
-                      {selectedFuel} : <strong>{price.toFixed(3)} €</strong>
-                    </span>
-                  ) : (
-                    <span>Prix indisponible</span>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
+        <MarkerClusterGroup
+          chunkedLoading
+          showCoverageOnHover={false}
+          spiderfyOnMaxZoom
+          maxClusterRadius={45}
+          iconCreateFunction={(cluster) => createClusterIcon(cluster.getChildCount())}
+        >
+          {stations.map((station) => {
+            const selectedPrice = getPriceForFuel(station, selectedFuel);
+            const color = getMarkerPriceColor(selectedPrice, selectedFuel);
+
+            return (
+              <Marker
+                key={`${station.id}-${selectedFuel}`}
+                position={[station.lat, station.lon]}
+                icon={createPriceIcon(selectedPrice, color)}
+              >
+                <Popup>
+                  <div className="popup-content">
+                    <h3>{station.name}</h3>
+                    <p>{station.address}</p>
+                    <p>
+                      {station.city} ({station.postalCode}) — Dép. {station.department}
+                    </p>
+
+                    <div className="popup-selected-price">
+                      <span>{selectedFuel}</span>
+                      <strong>
+                        {selectedPrice !== null ? `${selectedPrice.toFixed(3)} €` : "Indisponible"}
+                      </strong>
+                    </div>
+
+                    <div className="popup-prices">
+                      {station.prices.map((price) => (
+                        <div key={price.fuelType} className="popup-price-row">
+                          <span>{price.fuelType}</span>
+                          <strong>{price.price.toFixed(3)} €</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
+        </MarkerClusterGroup>
       </MapContainer>
     </div>
   );

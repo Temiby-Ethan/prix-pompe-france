@@ -2,8 +2,8 @@ import "./globals.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Prix à la pompe France",
-  description: "Comparatif des stations-service sur une carte de France",
+  title: "Carte carburant France",
+  description: "Carte interactive des stations-service et comparaison des prix à la pompe",
 };
 
 export default function RootLayout({
